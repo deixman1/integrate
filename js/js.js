@@ -111,14 +111,14 @@ setInterval(function(){
 				}
 				try{
 				VK.img = e.response[1].attachment.photo.src_big;
-				sendVK(e);
+				sendTelegramPhoto(e, VK.img);
 				return;
 				}catch(err){
 				}
 				try{
 				VK.img = e.response[1].attachment.wall.attachment.photo.src_big;
 				VK.message = e.response[1].attachment.wall.text;
-				sendVK(e);
+				sendTelegramPhoto(e, VK.img);
 				return;
 				}catch(err){
 				}
@@ -135,7 +135,7 @@ setInterval(function(){
 					//console.log(getVideo);
 					VK.video = getVideo.response[1].player;
 					VK.message = e.response[1].attachment.wall.text;
-					sendVK(e);
+					sendTelegram(e);
 				});
 				return;
 				}catch(err){
@@ -151,19 +151,37 @@ setInterval(function(){
 				}).done(function(getVideo) {
 					//console.log(getVideo);
 					VK.video = getVideo.response[1].player;
+					/*$.ajax({
+						url: '/getVideoURL.php',
+						type: 'get',
+						dataType: 'json',
+						data: {url: VK.video},
+					}).done(function(getVideoURL) {
+						console.log(getVideoURL);
+						if(getVideoURL)
+						{
+							sendTelegramVideo(e, getVideoURL);
+						}
+						else
+						{
+							VK.message += ' Приватное видео';
+							sendTelegram(e);
+						}
+					});*/
+					sendTelegram(e);
 					//VK.message = e.response[1].attachment.wall.text;
-					sendVK(e);
+					//sendTelegram(e);
 				});
 				return;
 				}catch(err){
 				}
-				sendVK(e);
+				sendTelegram(e);
 				//console.log(VK);
 			}
 	});
 },1000);
 
-function sendVK(e)
+function sendTelegram(e)
 {
 	$.ajax({
 		url: 'https://api.vk.com/method/users.get',
@@ -184,6 +202,54 @@ function sendVK(e)
 		type: 'GET',
 		dataType: 'json',
 		data: {chat_id: Telegram.chatId, text: VK.messageReturn},
+		});
+	});
+}
+function sendTelegramVideo(e, urlVideo)
+{
+	$.ajax({
+		url: 'https://api.vk.com/method/users.get',
+		type: 'get',
+		dataType: 'jsonp',
+		crossDomain: true,
+		data: {user_ids: e.response[1].uid, access_token: VK.token},
+	}).done(function(user) {
+		VK.firstname = user.response[0].first_name;
+		VK.lastname = user.response[0].last_name;
+		VK.messageReturn = '(VK)'+VK.firstname+' '+VK.lastname+': '+VK.message+' '+VK.img+''+VK.doc;
+		VK.img = '';
+		VK.video = '';
+		VK.doc = '';
+		stats.vk++;
+		$.ajax({
+		url: 'https://api.telegram.org/bot'+Telegram.token+'/sendVideo',
+		type: 'GET',
+		dataType: 'json',
+		data: {chat_id: Telegram.chatId, caption: VK.messageReturn, video: decodeURI(urlVideo)},
+		});
+	});
+}
+function sendTelegramPhoto(e, urlPhoto)
+{
+	$.ajax({
+		url: 'https://api.vk.com/method/users.get',
+		type: 'get',
+		dataType: 'jsonp',
+		crossDomain: true,
+		data: {user_ids: e.response[1].uid, access_token: VK.token},
+	}).done(function(user) {
+		VK.firstname = user.response[0].first_name;
+		VK.lastname = user.response[0].last_name;
+		VK.messageReturn = '(VK)'+VK.firstname+' '+VK.lastname+': '+VK.message+' '+VK.doc;
+		VK.img = '';
+		VK.video = '';
+		VK.doc = '';
+		stats.vk++;
+		$.ajax({
+		url: 'https://api.telegram.org/bot'+Telegram.token+'/sendPhoto',
+		type: 'GET',
+		dataType: 'json',
+		data: {chat_id: Telegram.chatId, caption: VK.messageReturn, photo: urlPhoto},
 		});
 	});
 }
