@@ -2,10 +2,10 @@
 file_put_contents("video.mp4", fopen(urldecode($_REQUEST['url']), 'r'));
 $params=[
     'chat_id'=>'-1001143659191',
-    'document'=>new CURLFile(realpath('video.mp4')),
+    'video'=>new CURLFile(realpath('video.mp4')),
     'caption' => $_REQUEST['caption'],
 ];
-$ch = curl_init('https://api.telegram.org/bot'.$_REQUEST["token"].'/sendDocument');
+$ch = curl_init('https://api.telegram.org/bot'.$_REQUEST["token"].'/sendVideo');
 curl_setopt($ch, CURLOPT_HEADER, false);
 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
     "Content-Type:multipart/form-data"
