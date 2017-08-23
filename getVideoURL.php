@@ -3,47 +3,83 @@ function find($page, $from, $to)
 {
     $fromlen = strlen($from);
     $from = strpos($page, $from);
+    if($from === false) return 0;
     $to = strpos($page, $to);
     $resul = substr($page, ($from + $fromlen), ($to - $from - $fromlen));
     return $resul;
 }
-
-ini_set('max_execution_time', '0');
-header('Content-Type: text/html; charset=utf-8');
-$url_in = $_REQUEST['url'];
-//echo vk_video($url_in); // Запускаем основную функцию
-function curl($url, $cookie = false, $post = false, $header = false, $follow_location = false) {
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FAILONERROR, true);
-    curl_setopt($ch, CURLOPT_HEADER, $header);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $follow_location);
-    if ($cookie) {
-        curl_setopt ($ch, CURLOPT_COOKIE, $cookie);
-    }
-    if ($post) {
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
-    }
-    $response = curl_exec ($ch);
-    curl_close($ch);
-    return $response;
-}
-//echo curl($url_in);
+//curl 'http://cs507407.vk.me/u112847320/video/l_ff5a5b75.jpg' -H 'Accept: image/png,image/*;q=0.8,*/*;q=0.5' -H 'Accept-Encoding: gzip, deflate' -H 'Accept-Language: en-US,en;q=0.5' -H 'Cache-Control: max-age=0' -H 'Connection: keep-alive' -H 'Host: cs507407.vk.me' -H 'If-Modified-Since: Wed, 24 Apr 2013 15:54:42 GMT' -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0'
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, urldecode($_REQUEST['url']));
+curl_setopt($ch, CURLOPT_HEADER, 1);
+curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$html = curl_exec($ch);
+curl_close($ch);
 /*$file = fopen('1.txt', 'w');
-fwrite($file, curl($url_in));
+fwrite($file, $html);
 fclose($file);*/
-$url = find(curl($url_in), '<source src="', '" type="video/mp4"></source>');
+$url;
+
+if(find($html, ',"url1080":"', '","jpg"'))
+{
+    $url = find($html, ',"url1080":"', '","jpg"');
+}
+else
+{
+    if(find($html, ',"url720":"', '","jpg"'))
+    {
+        $url = find($html, ',"url720":"', '","jpg"');
+    }
+    else
+    {
+        if(find($html, ',"url360":"', '","jpg"'))
+        {
+            $url = find($html, ',"url360":"', '","jpg"');
+        }
+        else
+        {
+            if(find($html, ',"url240":"', '","jpg"'))
+            {
+                $url = find($html, ',"url240":"', '","jpg"');
+            }
+        }
+    }
+}
+if(find($html, ',"url1080":"', '","hls"'))
+{
+    $url = find($html, ',"url1080":"', '","hls"');
+}
+else
+{
+    if(find($html, ',"url720":"', '","hls"'))
+    {
+        $url = find($html, ',"url720":"', '","hls"');
+    }
+    else
+    {
+        if(find($html, ',"url360":"', '","hls"'))
+        {
+            $url = find($html, ',"url360":"', '","hls"');
+        }
+        else
+        {
+            if(find($html, ',"url240":"', '","hls"'))
+            {
+                $url = find($html, ',"url240":"', '","hls"');
+            }
+        }
+    }
+}
+    
+
+//echo $url = str_replace(array('\/', '////'), "//", $url);
+//echo json_encode(str_replace("////", "//", $url));
+//header("Location: getvideourl.php?json=".urlencode($url));
+$url = str_replace("\\", "", $url);
 echo json_encode($url);
-exit();
-/*function vk_video($url_in){
- 
-    $vk_video = curl($url_in);
-    preg_match('|host=(.*)&|Uis', $vk_video, $link1);
-    preg_match('|vkid=(.*)&|Uis', $vk_video, $link2);
-    preg_match('|vtag=(.*)&|Uis', $vk_video, $link3);
- 
-    echo '<a href="http://'.$link1[1].'/assets/videos/'.$link3[1].$link2[1].'.vk.flv">http://'.$link1[1].'/assets/videos/'.$link3[1].$link2[1].'.vk.flv</a>';
-}*/
- 
+//unlink('video.mp4');
+
+//unlink('video.mp4');
+//file_put_contents("https://api.telegram.org/bot426929260:AAEW5BWWoPXcBGNCgtwrBRRcTnBV8tcxuTY/sendDocument?chat_id=-1001143659191&document", fopen($url, 'r'));
 ?>
