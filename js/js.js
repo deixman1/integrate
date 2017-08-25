@@ -102,6 +102,15 @@ setInterval(function(){
 				VK.last_message = e.response[1].date;
 				VK.message = e.response[1].body;
 				try{
+					if(e.response[1].attachment.doc.title == 'voice_message.webm')
+					{
+						VK.doc = e.response[1].attachment.doc.url;
+						sendTelegramVoice(e, VK.doc);
+						return;
+					}
+				}catch(err){
+				}
+				try{
 				VK.doc = e.response[1].attachment.wall.attachment.doc.url;
 				sendTelegramDocument(e, VK.doc);
 				return;
@@ -364,6 +373,31 @@ function sendTelegramAudio(e, urlAudio)
 		type: 'GET',
 		dataType: 'json',
 		data: {chat_id: Telegram.chatId, caption: VK.messageReturn, audio: urlAudio},
+		});
+	});
+}
+function sendTelegramVoice(e, urlAudio)
+{
+	$.ajax({
+		url: 'https://api.vk.com/method/users.get',
+		type: 'get',
+		dataType: 'jsonp',
+		crossDomain: true,
+		data: {user_ids: e.response[1].uid, access_token: VK.token},
+	}).done(function(user) {
+		VK.firstname = user.response[0].first_name;
+		VK.lastname = user.response[0].last_name;
+		VK.messageReturn = '(VK)'+VK.firstname+' '+VK.lastname+':\n'+VK.message;
+		VK.messageReturn = VK.messageReturn.replace(/\<br\>/g, '\n');
+		VK.img = '';
+		VK.video = '';
+		VK.doc = '';
+		stats.vk++;
+		$.ajax({
+		url: 'https://api.telegram.org/bot'+Telegram.token+'/sendVoice',
+		type: 'GET',
+		dataType: 'json',
+		data: {chat_id: Telegram.chatId, caption: VK.messageReturn, voice: urlAudio},
 		});
 	});
 }
