@@ -35,6 +35,7 @@ setInterval(function(){
 		url: 'https://api.telegram.org/bot'+Telegram.token+'/getUpdates',
 		type: 'GET',
 		dataType: 'json',
+		async: false,
 		data: {offset: Telegram.offset},
 	})
 	.done(function(e) {
@@ -59,6 +60,7 @@ setInterval(function(){
 						$.ajax({
 						url: 'https://api.telegram.org/bot'+Telegram.token+'/sendMessage',
 						type: 'GET',
+						async: false,
 						dataType: 'json',
 						data: {chat_id: Telegram.chatId, text: Telegram.messageReturn},
 						});
@@ -80,6 +82,7 @@ setInterval(function(){
 				url: 'https://api.vk.com/method/messages.send',
 				type: 'get',
 				dataType: 'jsonp',
+				async: false,
 				crossDomain: true,
 				data: {chat_id: 3, message: Telegram.messageReturn, access_token: VK.token},
 				});
@@ -90,6 +93,7 @@ setInterval(function(){
 		url: 'https://api.vk.com/method/messages.get',
 		type: 'get',
 		dataType: 'jsonp',
+		async: false,
 		crossDomain: true,
 		data: {out: 0, count: 1, access_token: VK.token},
 	})
@@ -252,6 +256,7 @@ function sendTelegram(e)
 		type: 'get',
 		dataType: 'jsonp',
 		crossDomain: true,
+		async: false,
 		data: {user_ids: e.response[1].uid, access_token: VK.token},
 	}).done(function(user) {
 		VK.firstname = user.response[0].first_name;
@@ -308,6 +313,7 @@ function sendTelegramPhoto(e, urlPhoto)
 		type: 'get',
 		dataType: 'jsonp',
 		crossDomain: true,
+		async: false,
 		data: {user_ids: e.response[1].uid, access_token: VK.token},
 	}).done(function(user) {
 		VK.firstname = user.response[0].first_name;
@@ -333,6 +339,7 @@ function sendTelegramDocument(e, urlDocument)
 		type: 'get',
 		dataType: 'jsonp',
 		crossDomain: true,
+		async: false,
 		data: {user_ids: e.response[1].uid, access_token: VK.token},
 	}).done(function(user) {
 		VK.firstname = user.response[0].first_name;
@@ -358,6 +365,7 @@ function sendTelegramAudio(e, urlAudio)
 		type: 'get',
 		dataType: 'jsonp',
 		crossDomain: true,
+		async: false,
 		data: {user_ids: e.response[1].uid, access_token: VK.token},
 	}).done(function(user) {
 		VK.firstname = user.response[0].first_name;
@@ -383,6 +391,7 @@ function sendTelegramVoice(e, urlAudio)
 		type: 'get',
 		dataType: 'jsonp',
 		crossDomain: true,
+		async: false,
 		data: {user_ids: e.response[1].uid, access_token: VK.token},
 	}).done(function(user) {
 		VK.firstname = user.response[0].first_name;
