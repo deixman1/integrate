@@ -3,6 +3,10 @@
 //https://api.vk.com/method/messages.get?out=0&count=1&&access_token=203d08e37d16cbe5c034431933a5455e7ee86b69e90c51f6173bf3370d68be83b692bc4282de84adec98b
 //https://api.vk.com/method/photos.getMessagesUploadServer?upload_url=https://pp.userapi.com/c638119/v638119018/554e1/_O0LMe1FaPY.jpg&access_token=203d08e37d16cbe5c034431933a5455e7ee86b69e90c51f6173bf3370d68be83b692bc4282de84adec98b
 //https://api.vk.com/method/video.get?videos=335456267_456240107_6e75c35eca16c1c3a3&access_token=203d08e37d16cbe5c034431933a5455e7ee86b69e90c51f6173bf3370d68be83b692bc4282de84adec98b
+function sleep(ms) {
+ms += new Date().getTime();
+while (new Date() < ms){}
+}
 var Telegram = {
 	offset: 0,
 	token: '426929260:AAEW5BWWoPXcBGNCgtwrBRRcTnBV8tcxuTY',
@@ -35,7 +39,6 @@ setInterval(function(){
 		url: 'https://api.telegram.org/bot'+Telegram.token+'/getUpdates',
 		type: 'GET',
 		dataType: 'json',
-		async: false,
 		data: {offset: Telegram.offset},
 	})
 	.done(function(e) {
@@ -68,13 +71,13 @@ setInterval(function(){
 					}
 					else
 					{
-						Telegram.messageReturn = '(Telegram)'+Telegram.username+': '+Telegram.message.replace(/Тͥͥ/g, 'я сосу хуй ');//+' '+Telegram.img;
+						Telegram.messageReturn = '(Telegram)'+Telegram.username+':\n'+Telegram.message.replace(/Тͥͥ/g, 'я сосу хуй ');//+' '+Telegram.img;
 					}
 				}
 			}
 			else {
 				Telegram.username = e.result[0].message.from.username;
-				Telegram.messageReturn = '(Telegram)'+Telegram.username+': '+Telegram.message+' IMG';
+				Telegram.messageReturn = '(Telegram)'+Telegram.username+':\n'+Telegram.message+' IMG';
 				//Telegram.img = '';
 			}
 			stats.telegram++;
@@ -93,7 +96,6 @@ setInterval(function(){
 		url: 'https://api.vk.com/method/messages.get',
 		type: 'get',
 		dataType: 'jsonp',
-		async: false,
 		crossDomain: true,
 		data: {out: 0, count: 1, access_token: VK.token},
 	})
