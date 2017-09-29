@@ -11,6 +11,7 @@ var VK = {
 	//token: 'f4c5696a8e6bce620bd8cd0f20c51f34891380a465db2a4bfa6fa92b7b277cc32eddec8bce375d3377274',
 	token: 'd64dd49c027d9376c64bc62f77df9a60881ae459ca43e298e8be9aa8c8fa3573fdd3917ba195f5a9eafbb',
 };
+var shit = false;
 var messages = {};
 finish_polling_vk();
 start_polling_telegram();
@@ -22,7 +23,7 @@ function start_polling_telegram(){
 		data: {offset: Telegram.offset, timeout: 25},
 	})
 	.done(function(e) {
-		console.log(e);
+		//console.log(e);
 		if(!e.result.length)
 		{
 			start_polling_telegram();
@@ -115,16 +116,43 @@ function unknow(id){
 		if(!message.response[1].out)
 		{
 			VK.uid = message.response[1].uid;
-			console.log(message.response[1]);
-			//messages.fwd_messages = message.response[1].fwd_messages;
+			console.log(message);
 			if(message.response[1].body != "")
-				messages.text = message.response[1].body;
+				messages.atext = message.response[1].body;
+			if(typeof message.response[1].fwd_messages !== "undefined")
+			{
+				SendTelegram_fwd_messages(message.response[1].fwd_messages, VK.uid);
+				shit = true;
+			}
 			if(typeof message.response[1].attachment !== "undefined")
+			{
 				attachment(message.response[1].attachment);
-			else
+				shit = true;
+			}
+			if(!shit)
 				sendTelegram(VK.uid);
 		}
 	});
+}
+function SendTelegram_fwd_messages(e, uid){
+	messages.fwd_messages = 'Forwarded Messages:\n';
+	e.forEach(function (val, key) {
+		$.ajax({
+			url: 'https://api.vk.com/method/users.get',
+			type: 'get',
+			dataType: 'jsonp',
+			crossDomain: true,
+			async: false,
+			data: {user_ids: val.uid, access_token: VK.token},
+		}).done(function(user) {
+			messages.fwd_messages += '(VK)'+user.response[0].first_name+' '+user.response[0].last_name+':\n'
+			messages.fwd_messages += val.body+'\n';
+			/*messages.updates.forEach(function (val, key) {
+				VK.messageReturn += val+'\n';
+			});*/
+		});
+	});
+	sendTelegram(uid);
 }
 function video(e){
 	$.ajax({
@@ -141,9 +169,6 @@ function video(e){
 	});
 	//return v;
 	//return 'First link: https:\/\/vk.com\/video_ext.php?oid='+e.owner_id+'&id='+e.vid+'&hash='+e.access_key+'\nSecond link: https://vk.com/im?z=video'+e.owner_id+'_'+e.vid+'%2F'+e.access_key;
-}
-function setvideo(e){
-	messages.video = e;
 }
 function attachment(e){
 	switch (e.type) {
