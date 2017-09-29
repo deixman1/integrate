@@ -12,8 +12,57 @@ var VK = {
 	token: 'd64dd49c027d9376c64bc62f77df9a60881ae459ca43e298e8be9aa8c8fa3573fdd3917ba195f5a9eafbb',
 };
 var messages = {};
-finish();
-function finish(){
+finish_polling_vk();
+start_polling_telegram();
+function start_polling_telegram(){
+	$.ajax({
+		url: 'https://api.telegram.org/bot'+Telegram.token+'/getUpdates',
+		type: 'GET',
+		dataType: 'json',
+		data: {offset: Telegram.offset, timeout: 25},
+	})
+	.done(function(e) {
+		console.log(e);
+		if(!e.result.length)
+		{
+			start_polling_telegram();
+			return;
+		}
+		try{
+			Telegram.offset = e.result[0].update_id+1;
+			start_polling_telegram();
+			//Telegram.chatId = e.result[0].message.chat.id;
+			Telegram.message = (e.result[0].message.text == undefined) ? '' : e.result[0].message.text;
+			if(e.result[0].message.photo === undefined && e.result[0].message.sticker === undefined && e.result[0].message.document === undefined)
+			{
+				//Telegram.img = 'IMG';
+				Telegram.username = e.result[0].message.from.username;
+				if(Telegram.message[0] == '!')
+				{
+					Telegram.messageReturn = Telegram.message;
+				}
+				else
+				{
+					Telegram.messageReturn = '(Telegram)'+Telegram.username+':\n'+Telegram.message.replace(/Тͥͥ/g, 'я сосу хуй ');//+' '+Telegram.img;
+				}
+			}
+			else {
+				Telegram.username = e.result[0].message.from.username;
+				Telegram.messageReturn = '(Telegram)'+Telegram.username+':\n'+Telegram.message+' IMG';
+				//Telegram.img = '';
+			}
+			$.ajax({
+				url: 'https://api.vk.com/method/messages.send',
+				type: 'get',
+				dataType: 'jsonp',
+				crossDomain: true,
+				data: {chat_id: 3, message: Telegram.messageReturn, access_token: VK.token},
+			});
+		}catch(err)
+		{}
+	});
+}
+function finish_polling_vk(){
 $.ajax({
 	url: 'https://api.vk.com/method/messages.getLongPollServer',
 	type: 'get',
@@ -27,13 +76,13 @@ $.ajax({
 		VK.key = e.response.key;
 		VK.ts = e.response.ts;
 		VK.server = e.response.server;
-		start();
+		start_polling_vk();
 	}
 	else
-		finish();
+		finish_polling_vk();
 });
 }
-function start(){
+function start_polling_vk(){
 	$.ajax({
 		url: 'longpoll.php',
 		type: 'get',
@@ -51,7 +100,7 @@ function start(){
 					break;
 			}
 		});
-		finish();
+		finish_polling_vk();
 	});
 }
 function unknow(id){
@@ -65,35 +114,56 @@ function unknow(id){
 		if(typeof message.response[1] !== "undefined")
 		if(!message.response[1].out)
 		{
+			VK.uid = message.response[1].uid;
 			console.log(message.response[1]);
 			//messages.fwd_messages = message.response[1].fwd_messages;
 			if(message.response[1].body != "")
 				messages.text = message.response[1].body;
 			if(typeof message.response[1].attachment !== "undefined")
 				attachment(message.response[1].attachment);
-			sendTelegram(message.response[1].uid);
+			else
+				sendTelegram(VK.uid);
 		}
 	});
 }
 function video(e){
-	return 'First link: https:\/\/vk.com\/video_ext.php?oid='+e.owner_id+'&id='+e.vid+'&hash='+e.access_key+'\nSecond link: https://vk.com/im?z=video'+e.owner_id+'_'+e.vid+'%2F'+e.access_key;
+	$.ajax({
+		url: 'https://api.vk.com/method/video.get',
+		type: 'get',
+		dataType: 'jsonp',
+		crossDomain: true,
+		async: false,
+		data: {videos: e.owner_id+'_'+e.vid+'_'+e.access_key, access_token: VK.token},
+	}).done(function(getVideo) {
+		console.log(getVideo.response[1].player);
+		messages.video = 'First link: '+getVideo.response[1].player+'\nSecond link: https://vk.com/im?z='+getVideo.response[1].link+'%2F'+e.access_key;
+		sendTelegram(VK.uid);
+	});
+	//return v;
+	//return 'First link: https:\/\/vk.com\/video_ext.php?oid='+e.owner_id+'&id='+e.vid+'&hash='+e.access_key+'\nSecond link: https://vk.com/im?z=video'+e.owner_id+'_'+e.vid+'%2F'+e.access_key;
+}
+function setvideo(e){
+	messages.video = e;
 }
 function attachment(e){
 	switch (e.type) {
 		case 'video':
-			messages.video = video(e.video);
+			video(e.video);
 			break;
 		case 'doc':
 			// statements_1
 			messages.doc = e.doc.url;
+			sendTelegram(VK.uid);
 			break;
 		case 'photo':
 			// statements_1 src_big 137774
 			messages.photo = e.photo.src_big
+			sendTelegram(VK.uid);
 			break;
 		case 'audio':
 			// statements_1 src_big 137774
 			messages.audio = e.audio.url
+			sendTelegram(VK.uid);
 			break;
 	}
 }
