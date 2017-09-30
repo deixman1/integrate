@@ -13,6 +13,7 @@ var VK = {
 };
 var shit = false;
 var messages = {};
+var photo = [];
 finish_polling_vk();
 start_polling_telegram();
 function start_polling_telegram(){
@@ -112,47 +113,61 @@ function unknow(id){
 		crossDomain: true,
 		data: {message_ids: id, access_token: VK.token},
 	}).done(function(message) {
-		if(typeof message.response[1] !== "undefined")
-		if(!message.response[1].out)
-		{
-			VK.uid = message.response[1].uid;
-			console.log(message);
-			if(message.response[1].body != "")
-				messages.atext = message.response[1].body;
-			if(typeof message.response[1].fwd_messages !== "undefined")
+		try{
+			if(!message.response[1].out)
 			{
-				SendTelegram_fwd_messages(message.response[1].fwd_messages, VK.uid);
-				shit = true;
+				VK.uid = message.response[1].uid;
+				console.log(message);
+				if(message.response[1].body != "")
+					messages.atext = message.response[1].body;
+				if(typeof message.response[1].fwd_messages !== "undefined")
+				{
+					SendTelegram_fwd_messages(message.response[1].fwd_messages, VK.uid);
+					shit = true;
+				}
+				if(typeof message.response[1].attachments !== "undefined")
+				{
+					attachments(message.response[1].attachments);
+					shit = true;
+				}
+				if(!shit)
+					sendTelegram(VK.uid);
+				shit = false;
 			}
-			if(typeof message.response[1].attachment !== "undefined")
-			{
-				attachment(message.response[1].attachment);
-				shit = true;
-			}
-			if(!shit)
-				sendTelegram(VK.uid);
-		}
+		}catch(e){};
 	});
 }
 function SendTelegram_fwd_messages(e, uid){
-	messages.fwd_messages = 'Forwarded Messages:\n';
+
+	var fwd_messages = 'Forwarded messages:\n***********************************************\n';
+	console.log(e);
 	e.forEach(function (val, key) {
 		$.ajax({
 			url: 'https://api.vk.com/method/users.get',
 			type: 'get',
 			dataType: 'jsonp',
 			crossDomain: true,
-			async: false,
+			
 			data: {user_ids: val.uid, access_token: VK.token},
 		}).done(function(user) {
-			messages.fwd_messages += '(VK)'+user.response[0].first_name+' '+user.response[0].last_name+':\n'
-			messages.fwd_messages += val.body+'\n';
+			e[key] = '    |  (VK)'+user.response[0].first_name+' '+user.response[0].last_name+':\n';
+			e[key] += '    |  '+val.body+'\n';
+			//messages.fwd_messages += '(VK)'+user.response[0].first_name+' '+user.response[0].last_name+':\n';
+			//messages.fwd_messages += val.body+'\n';
+			if((key+1) == e.length)
+			{
+				e.forEach(function (valu, keys) {
+					console.log(valu);
+					fwd_messages += valu;
+				});
+				fwd_messages += '\n***********************************************';
+				sendTelegram(uid, fwd_messages);
+			}
 			/*messages.updates.forEach(function (val, key) {
 				VK.messageReturn += val+'\n';
 			});*/
 		});
 	});
-	sendTelegram(uid);
 }
 function video(e){
 	$.ajax({
@@ -160,7 +175,7 @@ function video(e){
 		type: 'get',
 		dataType: 'jsonp',
 		crossDomain: true,
-		async: false,
+		
 		data: {videos: e.owner_id+'_'+e.vid+'_'+e.access_key, access_token: VK.token},
 	}).done(function(getVideo) {
 		console.log(getVideo.response[1].player);
@@ -170,29 +185,44 @@ function video(e){
 	//return v;
 	//return 'First link: https:\/\/vk.com\/video_ext.php?oid='+e.owner_id+'&id='+e.vid+'&hash='+e.access_key+'\nSecond link: https://vk.com/im?z=video'+e.owner_id+'_'+e.vid+'%2F'+e.access_key;
 }
-function attachment(e){
-	switch (e.type) {
-		case 'video':
-			video(e.video);
-			break;
-		case 'doc':
-			// statements_1
-			messages.doc = e.doc.url;
-			sendTelegram(VK.uid);
-			break;
-		case 'photo':
-			// statements_1 src_big 137774
-			messages.photo = e.photo.src_big
-			sendTelegram(VK.uid);
-			break;
-		case 'audio':
-			// statements_1 src_big 137774
-			messages.audio = e.audio.url
-			sendTelegram(VK.uid);
-			break;
-	}
+function attachments(e){
+	e.forEach(function (val, key) {
+		switch (e[key].type) {
+			case 'video':
+				video(e[key].video);
+				break;
+			case 'doc':
+				// statements_1
+				sendTelegram(VK.uid, e[key].doc.url);
+				break;
+			case 'photo':
+				// statements_1 src_big 137774
+				console.log(e[key].photo.src_big);
+				photo[key] = e[key].photo.src_big
+				if((key+1) == e.length)
+				{
+					console.log(photo);
+					photo.forEach(function (v, k) {
+						console.log(v);
+						sendTelegram(VK.uid, v);
+					});
+					photo = [];
+				}
+				break;
+			case 'audio':
+				// statements_1 src_big 137774
+				sendTelegram(VK.uid, e[key].audio.url);
+				break;
+			case 'wall':
+				attachments(e[key].wall.attachments);
+				break;
+		}
+	});
 }
-function sendTelegram(uid)
+function wall(){
+
+}
+function sendTelegram(uid, send = false)
 {
 	$.ajax({
 		url: 'https://api.vk.com/method/users.get',
@@ -205,10 +235,12 @@ function sendTelegram(uid)
 		/*messages.updates.forEach(function (val, key) {
 			VK.messageReturn += val+'\n';
 		});*/
-		console.log(messages);
+		console.log(send);
 		for(key in messages){
 			VK.messageReturn += messages[key]+'\n';
 		}
+		if(send)
+			VK.messageReturn += send;
 		VK.messageReturn = VK.messageReturn.replace(/\<br\>/g, '\n');
 		$.ajax({
 		url: 'https://api.telegram.org/bot'+Telegram.token+'/sendMessage',
