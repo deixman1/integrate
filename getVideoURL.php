@@ -1,85 +1,15 @@
-<?PHP
-function find($page, $from, $to)
-{
-    $fromlen = strlen($from);
-    $from = strpos($page, $from);
-    if($from === false) return 0;
-    $to = strpos($page, $to);
-    $resul = substr($page, ($from + $fromlen), ($to - $from - $fromlen));
-    return $resul;
-}
-//curl 'http://cs507407.vk.me/u112847320/video/l_ff5a5b75.jpg' -H 'Accept: image/png,image/*;q=0.8,*/*;q=0.5' -H 'Accept-Encoding: gzip, deflate' -H 'Accept-Language: en-US,en;q=0.5' -H 'Cache-Control: max-age=0' -H 'Connection: keep-alive' -H 'Host: cs507407.vk.me' -H 'If-Modified-Since: Wed, 24 Apr 2013 15:54:42 GMT' -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0'
+<?php
+//https://vk.com/dev?act=a_run_method&al=1&hash=1507024762%3Acfd10761af3a98c9c9&method=video.get&param_extended=1&param_owner_id=66748&param_v=5.68&param_videos=123
+
+header('Content-Type: text/html; charset=windows-1251');
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, urldecode($_REQUEST['url']));
-curl_setopt($ch, CURLOPT_HEADER, 1);
-curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36");
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$html = curl_exec($ch);
-curl_close($ch);
-/*$file = fopen('1.txt', 'w');
-fwrite($file, $html);
-fclose($file);*/
-$url;
+curl_setopt($ch, CURLOPT_URL,"https://vk.com/dev?act=a_run_method&al=1&hash=1507024981:cea607a6ce0d3b04bf&method=video.get&param_extended=1&param_owner_id=".$_REQUEST['owner_id']."&param_v=5.68&param_videos=".$_REQUEST['videos']);
+$headers = [
+    'cookie: remixlang=0; remixdt=14400; remixstid=509958758_b7f24a4a782f8d1989; remixseenads=0; remixrefkey=74c9ca889b42fe3bc7; remixsid=444d406989f9b128cf4be6bc27d5f9fdcd009eae92888574dfcc4; remixcurr_audio=-1090630_456240218; remixflash=27.0.0; remixscreen_depth=24; tmr_detect=1%7C1506874962876; remixab=1',
+];
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+$html = curl_exec ($ch);
 
-if(find($html, ',"url1080":"', '","jpg"'))
-{
-    $url = find($html, ',"url1080":"', '","jpg"');
-}
-else
-{
-    if(find($html, ',"url720":"', '","jpg"'))
-    {
-        $url = find($html, ',"url720":"', '","jpg"');
-    }
-    else
-    {
-        if(find($html, ',"url360":"', '","jpg"'))
-        {
-            $url = find($html, ',"url360":"', '","jpg"');
-        }
-        else
-        {
-            if(find($html, ',"url240":"', '","jpg"'))
-            {
-                $url = find($html, ',"url240":"', '","jpg"');
-            }
-        }
-    }
-}
-if(find($html, ',"url1080":"', '","hls"'))
-{
-    $url = find($html, ',"url1080":"', '","hls"');
-}
-else
-{
-    if(find($html, ',"url720":"', '","hls"'))
-    {
-        $url = find($html, ',"url720":"', '","hls"');
-    }
-    else
-    {
-        if(find($html, ',"url360":"', '","hls"'))
-        {
-            $url = find($html, ',"url360":"', '","hls"');
-        }
-        else
-        {
-            if(find($html, ',"url240":"', '","hls"'))
-            {
-                $url = find($html, ',"url240":"', '","hls"');
-            }
-        }
-    }
-}
-    
-
-//echo $url = str_replace(array('\/', '////'), "//", $url);
-//echo json_encode(str_replace("////", "//", $url));
-//header("Location: getvideourl.php?json=".urlencode($url));
-$url = str_replace("\\", "", $url);
-echo json_encode($url);
-//unlink('video.mp4');
-
-//unlink('video.mp4');
-//file_put_contents("https://api.telegram.org/bot426929260:AAEW5BWWoPXcBGNCgtwrBRRcTnBV8tcxuTY/sendDocument?chat_id=-1001143659191&document", fopen($url, 'r'));
-?>
+//echo '<body>'.json_encode($url).'</body>';
+curl_close ($ch);
+exit();
