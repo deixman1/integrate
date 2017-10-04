@@ -34,7 +34,6 @@ function clear(){
 	doc: [],
 	};
 }
-var p = 0;
 get_for_polling_vk();
 start_polling_telegram();
 function start_polling_telegram(){
@@ -227,47 +226,71 @@ function SendTelegram_fwd_messages(e, uid){
 		});
 	});
 }
-function attachments(e){
+function attachments(e, wall = true){
 	console.log(e);
 	e.forEach(function (val, key) {
 		switch (e[key].type) {
 			case 'video':
 				//sendTelegramVideo(VK.uid, 0);
 				console.log(e[key].video);
-				messages.video[key] = e[key].video;
-				if(e.length-1 == key)
-					sendTelegramVideo(VK.uid, 0);
+				messages.video[messages.video.length] = e[key].video;
+				//if(e.length-1 == key)
+				//	sendTelegramVideo(VK.uid, 0);
 				break;
 			case 'doc':
 				// statements_1
-				messages.doc[key] = e[key].doc.url;
-				if(e.length-1 == key)
-					sendTelegramDoc(VK.uid, 0);
+				messages.doc[messages.doc.length] = e[key].doc.url;
+				//if(e.length-1 == key)
+				//	sendTelegramDoc(VK.uid, 0);
 				break;
 			case 'photo':
 				// statements_1 src_big 137774
 				console.log(e[key].photo.src_big);
-				messages.photo[key] = e[key].photo.src_big;
-				if(e.length-1 == key)
-					sendTelegramPhoto(VK.uid, 0);
+				messages.photo[messages.photo.length] = e[key].photo.src_big;
+				//if(e.length-1 == key)
+				//	sendTelegramPhoto(VK.uid, 0);
 				break;
 			case 'audio':
 				// statements_1 src_big 137774
 				if(typeof e[key].audio.url !== "undefined")
-					messages.audio[key] = e[key].audio.url;
-				if(e.length-1 == key && messages.audio.length)
-					sendTelegramAudio(VK.uid, 0);
+					messages.audio[messages.audio.length] = e[key].audio.url;
+				//if(e.length-1 == key && messages.audio.length)
+				//	sendTelegramAudio(VK.uid, 0);
 				break;
 			case 'wall':
 				if(typeof e[key].wall.text !== "undefined")
 					messages.atext += '\n'+e[key].wall.text;
 				if(typeof e[key].wall.attachments !== "undefined")
-					attachments(e[key].wall.attachments);
+					attachments(e[key].wall.attachments, false);
 				else
 					sendTelegram(VK.uid);
 				break;
 		}
 	});
+
+	if (wall)
+		for(key in messages)
+		{
+			switch (key) {
+				case 'video':
+					if(messages.video.length)
+						sendTelegramVideo(VK.uid, 0);
+					break;
+				case 'audio':
+					if(messages.audio.length)
+						sendTelegramAudio(VK.uid, 0);
+					break;
+				case 'photo':
+					if(messages.photo.length)
+						sendTelegramPhoto(VK.uid, 0);
+					break;
+				case 'doc':
+					if(messages.doc.length)
+						sendTelegramDoc(VK.uid, 0);
+					break;
+			}
+		}
+
 }
 
 function sendTelegram(uid)
@@ -334,12 +357,13 @@ function sendTelegramVideo(uid, i)
 					$.ajax({
 					url: 'https://api.telegram.org/bot'+Telegram.token+'/sendVideo',
 					type: 'get',
-					dataType: 'jsonp',
+					dataType: 'json',
 					data: {chat_id: Telegram.chatId, caption: VK.messageReturn, video: urlVideo},
 					}).done(function() {
 						messages.atext = undefined;
 						sendTelegramVideo(uid, i+1);
 					});
+					
 				});
 			else
 				$.ajax({
@@ -363,8 +387,7 @@ function sendTelegramVideo(uid, i)
 		});
 	}
 	else{
-		clear();
-		console.log(messages);
+		messages.video = [];
 	}
 }
 function sendTelegramPhoto(uid, i)
@@ -396,8 +419,7 @@ function sendTelegramPhoto(uid, i)
 		});
 	}
 	else{
-		clear();
-		console.log(messages);
+		messages.photo = [];
 	}
 }
 function sendTelegramAudio(uid, i)
@@ -429,8 +451,7 @@ function sendTelegramAudio(uid, i)
 		});
 	}
 	else{
-		clear();
-		console.log(messages);
+		messages.audio = [];
 	}
 }
 function sendTelegramDoc(uid, i)
@@ -464,7 +485,6 @@ function sendTelegramDoc(uid, i)
 		});
 	}
 	else{
-		clear();
-		console.log(messages);
+		messages.doc = [];
 	}
 }
