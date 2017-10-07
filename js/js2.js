@@ -26,6 +26,8 @@ var messages = {
 	audio: [],
 	doc: [],
 };
+var reg = /[\w\d\!\#\[\]\'\"\|\s]*[фf]([\w\d\!\#\[\]\'\"\|\s]*)+[иnei1]([\w\d\!\#\[\]\'\"\|\s]*)+[аa4]([\w\d\!\#\[\]\'\"\|\s]*)+[cсs]([\w\d\!\#\[\]\'\"\|\s]*)+[кkc]|[\w\d\!\#\[\]\'\"\|\s]*[а4a]([\w\d\!\#\[\]\'\"\|\s]*)+[нhn]([\w\d\!\#\[\]\'\"\|\s]*)+[tт7]([\w\d\!\#\[\]\'\"\|\s]*)+[иnei1]([\w\d\!\#\[\]\'\"\|\s]*)+[xхh]([\w\d\!\#\[\]\'\"\|\s]*)+[а4a]([\w\d\!\#\[\]\'\"\|\s]*)+[йuyi]([\w\d\!\#\[\]\'\"\|\s]*)+[пp]|[\w\d\!\#\[\]\'\"\|\s]*[а4a]([\w\d\!\#\[\]\'\"\|\s]*)+[нhn]([\w\d\!\#\[\]\'\"\|\s]*)+[t7т]([\w\d\!\#\[\]\'\"\|\s]*)+[иnei1]([\w\d\!\#\[\]\'\"\|\s]*)+[xхh]([\w\d\!\#\[\]\'\"\|\s]*)+[йuyi]([\w\d\!\#\[\]\'\"\|\s]*)+[пp]([\w\d\!\#\[\]\'\"\|\s]*)+[e3]/gi
+var sosixyu = false;
 function clear(){
 	messages = {
 	photo: [],
@@ -55,12 +57,39 @@ function start_polling_telegram(){
 			start_polling_telegram();
 			//Telegram.chatId = e.result[0].message.chat.id;
 			Telegram.message = (e.result[0].message.text == undefined) ? '' : e.result[0].message.text;
+			Telegram.message += (typeof e.result[0].message.pinned_message !== "undefined") ? e.result[0].message.pinned_message.text : '';
 			console.log(e);
 			if(e.result[0].message.voice === undefined && e.result[0].message.audio === undefined && e.result[0].message.video === undefined && e.result[0].message.photo === undefined && e.result[0].message.sticker === undefined && e.result[0].message.document === undefined)
 			{
 				//Telegram.img = 'IMG';
 				Telegram.username = e.result[0].message.from.username;
-				if(Telegram.message.search(/ф\s*\s*\s*\s*и\s*\s*\s*\s*а\s*\s*\s*\s*с\s*\s*\s*\s*к|а\s*\s*\s*\s*н\s*\s*\s*\s*т\s*\s*\s*\s*и\s*\s*\s*\s*х\s*\s*\s*\s*а\s*\s*\s*\s*й\s*\s*\s*\s*п/gi))
+				//console.log(Telegram.message.search(reg.anti));
+				//console.log(sosixyu);
+				if(Telegram.message.search(reg) != -1)
+				{
+					Telegram.messageReturn = '(Telegram)'+Telegram.username+':\n'+'я сосу хуи с======8';
+					$.ajax({
+					url: 'https://api.vk.com/method/messages.send',
+					type: 'get',
+					dataType: 'jsonp',
+					crossDomain: true,
+					data: {chat_id: 3, message: Telegram.messageReturn, access_token: VK.token},
+					});
+					$.ajax({
+					url: 'https://api.telegram.org/bot'+Telegram.token+'/deleteMessage',
+					type: 'GET',
+					dataType: 'json',
+					data: {chat_id: Telegram.chatId, message_id: e.result[0].message.message_id},
+					});
+					if(typeof e.result[0].message.pinned_message !== "undefined")
+						$.ajax({
+						url: 'https://api.telegram.org/bot'+Telegram.token+'/deleteMessage',
+						type: 'GET',
+						dataType: 'json',
+						data: {chat_id: Telegram.chatId, message_id: e.result[0].message.pinned_message.message_id},
+						});
+				}
+				else
 				{
 					if(Telegram.message[0] == '!')
 					{
@@ -76,23 +105,6 @@ function start_polling_telegram(){
 					dataType: 'jsonp',
 					crossDomain: true,
 					data: {chat_id: 3, message: Telegram.messageReturn, access_token: VK.token},
-					});
-				}
-				else
-				{
-					Telegram.messageReturn = '(Telegram)'+Telegram.username+':\n'+'я сосу хуи с======8';
-					$.ajax({
-					url: 'https://api.vk.com/method/messages.send',
-					type: 'get',
-					dataType: 'jsonp',
-					crossDomain: true,
-					data: {chat_id: 3, message: Telegram.messageReturn, access_token: VK.token},
-					});
-					$.ajax({
-					url: 'https://api.telegram.org/bot'+Telegram.token+'/deleteMessage',
-					type: 'GET',
-					dataType: 'json',
-					data: {chat_id: Telegram.chatId, message_id: e.result[0].message.message_id},
 					});
 				}
 			}
@@ -136,7 +148,6 @@ function start_polling_vk(){
 		console.log(result);
 		if(typeof result.failed !== "undefined")
 		{
-			result.failed = result.failed;
 			get_for_polling_vk();
 			//return;
 		}
@@ -173,10 +184,12 @@ function unknow(id){
 				VK.uid = message.response[1].uid;
 				console.log(message);
 				if(message.response[1].body != "")
-					if((message.response[1].body).search(/ф\s*\s*\s*\s*и\s*\s*\s*\s*а\s*\s*\s*\s*с\s*\s*\s*\s*к|а\s*\s*\s*\s*н\s*\s*\s*\s*т\s*\s*\s*\s*и\s*\s*\s*\s*х\s*\s*\s*\s*а\s*\s*\s*\s*й\s*\s*\s*\s*п/gi))
-						messages.atext = message.response[1].body;
-					else
+				{
+					if(message.response[1].body.search(reg) != -1)
 						messages.atext = 'я сосу хуи с======8';
+					else
+						messages.atext = message.response[1].body;
+				}
 				if(typeof message.response[1].fwd_messages !== "undefined")
 				{
 					SendTelegram_fwd_messages(message.response[1].fwd_messages, VK.uid);
@@ -190,6 +203,7 @@ function unknow(id){
 				if(!shit)
 					sendTelegram(VK.uid);
 				shit = false;
+				sosixyu = false;
 			}
 		
 	});
